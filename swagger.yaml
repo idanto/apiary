@@ -1,0 +1,518 @@
+swagger: "2.0"
+info:
+  version: "0.0.1"
+  title: ZooZ REST API
+host: zooz-test.apigee.net
+basePath: /v1/zooz
+schemes:
+  - http
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /payments:
+    x-swagger-router-controller: payments
+    post:
+      description: create new payment
+      operationId: Open Payment
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/PaymentToken"
+        "400":
+          description: Request Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "500":
+          description: Internal Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /payments/{paymentToken}/authorize:
+    parameters:
+        - name: paymentToken
+          in: path
+          required: true
+          description: payment token that returened in OpenPaymentCommand
+          type: string
+        - name: authorizationData
+          required: true
+          description: authorization command data
+          in: body
+          schema:
+            $ref: '#/definitions/PaymentDetails'
+        - name: customerUserAgent
+          in: header
+          required: true
+          description: End user’s browser user agent
+          type: string
+        - name: customerIpAddress
+          in: header
+          required: false
+          description: IP v4 or v6 Address of the end user browser
+          type: string
+        - name: programId
+          in: header
+          required: true
+          type: string
+        - name: programKey
+          in: header
+          required: true
+          type: string
+    put:
+      description: Authorize exsisting payment
+      operationId: Authorize
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/PaymentAuthorizedResponse"
+        "400":
+          description: Request Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: Payment or app not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "500":
+          description: Internal Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /payments/{paymentToken}:
+    parameters:
+      - name: paymentToken
+        in: path
+        required: true
+        description: payment token that returened in OpenPaymentCommand
+        type: string
+      - name: programId
+        in: header
+        required: true
+        type: string
+      - name: programKey
+        in: header
+        required: true
+        type: string
+    get:
+      description: get payment details
+      operationId: GetPaymentDetails
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/PaymentDetails"
+        "400":
+          description: Request Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: Payment or app not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "500":
+          description: Internal Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /Users/{userId}/paymentMethods/creditCard:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: customer login id of the user
+        type: string
+      - name: creditCardDetails
+        in: body
+        required: true
+        description: customer login id of the user
+        schema:
+            $ref: '#/definitions/CreditCardDetails'
+      - name: programId
+        in: header
+        required: true
+        type: string
+      - name: programKey
+        in: header
+        required: true
+        type: string
+    post:
+      description: create credit card
+      operationId: AddCreditCard
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/paymentMethodDetailsResponse"
+        "400":
+          description: Request Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "500":
+          description: Internal Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /Users/{userId}/paymentMethods/paypal:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: customer login id of the user
+        type: string
+      - name: payPalPaymetMethodsDetails
+        in: body
+        required: true
+        description: customer login id of the user
+        schema:
+            $ref: '#/definitions/CreatePaypalPaymentMethodRequest'
+      - name: programId
+        in: header
+        required: true
+        type: string
+      - name: programKey
+        in: header
+        required: true
+        type: string
+    post:
+      description: create paypal billing aggrement
+      operationId: AddPayPalBillingAggrement
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/paymentMethodDetailsResponse"
+        "400":
+          description: Request Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "500":
+          description: Internal Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /Users/{userId}/paymentMethods:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: customer login id of the user
+        type: string
+      - name: programId
+        in: header
+        required: true
+        type: string
+      - name: programKey
+        in: header
+        required: true
+        type: string
+    get:
+      description: get all payment method of user
+      operationId: GetPaymentMethods
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/PaymentMethodsResponse"
+        "400":
+          description: Request Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "500":
+          description: Internal Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /Users/{userId}/paymentMethods/{token}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: customer login id of the user
+        type: string
+      - name: token
+        in: path
+        required: true
+        description: the payment method token to remove
+        type: string
+      - name: programId
+        in: header
+        required: true
+        type: string
+      - name: programKey
+        in: header
+        required: true
+        type: string
+    delete:
+      description: delete payment method of user
+      operationId: RemovePaymentMethods
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/paymentMethodDetailsResponse"
+        "400":
+          description: Request Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "500":
+          description: Internal Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+definitions:
+  PaymentDetails:
+    type: object
+    properties:
+      amount:
+        type: number
+        minimum: 0
+      reconciliationId:
+        type: string
+      paymentMethodDetails:
+        $ref: '#/definitions/AuthorizePaymentMethodDetails'
+      paymentData:
+        type: object
+        properties:
+          billingAddress:
+            $ref: "#/definitions/address"
+          # discountRates:
+          #   type: array
+          #   items:
+          #     $ref: "#/definitions/discountRate"
+          shippingMethod:
+            type: string
+          paymentInstallments:
+            $ref: "#/definitions/paymentInstallments"
+      merchantCustomData:
+        type: array
+        items:
+          $ref: "#/definitions/keyValue"
+  keyValue:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+  address:
+    type: object
+    properties:
+      countryCode:
+        type: string
+      state:
+        type: string
+      city:
+        type: string
+      address1:
+        type: string
+      address2:
+        type: string
+      address3:
+        type: string
+      zipCode:
+        type: string
+      title:
+        type: string
+      gender:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        $ref: "#/definitions/phoneNumber"
+  threeDSecureAttributes:
+    type: object
+    required:
+    - xid
+    - eciFlag
+    - cavv
+    - encoding
+    properties:
+      xid:
+        type: string
+      eciFlag:
+        type: string
+      cavv:
+        type: string
+      encoding:
+        type: string
+  # discountRate:
+  #   type: object
+  #   properties:
+  #     code:
+  #       type: string
+  #     rate:
+  #       type: number
+  paymentMethodDetailsResponse:
+    type: object
+    properties:
+      token:
+        type: string
+      provider:
+        type: string
+  phoneNumber:
+    type: object
+    properties:
+      countryCode:
+        type: string
+      phoneNumber:
+        type: string
+  userDetails:
+    type: object
+    properties:
+      customerLoginName:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      emailAddress:
+        type: string
+        pattern: '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$'
+  paymentInstallments:
+    type: object
+    required:
+    - numOfInstallments
+    properties:
+      numOfInstallments:
+        type: integer
+      firstInstallmentAmount:
+        type: number
+      remainingInstallmentsAmount:
+        type: number
+  PaymentAuthorizedResponse:
+    type: object
+    properties:
+      paymentStatus:
+        type: string
+      authorizationCode:
+        type: string
+      responseType:
+        type: string
+      reconciliationId:
+        type: string
+      processorResponse:
+        type: object
+        properties:
+          processorReferenceId:
+            type: string
+          fraudDetectionResponse:
+            type: string
+      riskRules:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  $ref: "#/definitions/ruleObject"
+      threeDSecure:
+        $ref: "#/definitions/threeDSecureAttributes"
+
+      processorName:
+        type: string
+  ruleObject:
+    type: object
+    properties:
+      action:
+        type: string
+      context:
+        type: string
+      riskScore:
+        type: string
+      description:
+        type: string
+      riskScoreOrigin:
+        type: string
+      determiningRule:
+        type: string
+  ErrorResponse:
+    required:
+      - message
+      - errorCode
+    properties:
+      message:
+        type: string
+      errorCode:
+        type: integer
+      moreDetails:
+        type: object
+        properties:
+          processorError:
+            type: string
+          processorResultCode:
+            type: string
+  PaymentToken:
+    type: string
+  PaymentMethodsResponse:
+    type: string
+    items:
+      $ref: '#/definitions/paymentMethodDetailsResponse'
+  CreditCardDetails:
+    type: string
+  CreatePaypalPaymentMethodRequest:
+    type: string
+  AuthorizePaymentMethodDetails:
+    type: object
+    discriminator: paymentMethodType
+    properties:
+      paymentMethodType:
+        type: string
+      redirectUrl:
+        type: string
+    required:
+    - paymentMethodType
+  CreditCard:
+    description: A representation of a craditCard
+    allOf:
+    - $ref: '#/definitions/AuthorizePaymentMethodDetails'
+    - type: object
+      properties:
+        cvvNumber:
+          type: integer
+          description: CVV number of the selected credit card.
+        authorize3DSecure:
+          type: boolean
+          description: True – requires 3D secure authorization, False – does not require 3D secure authorization
+          default: false
+        threeDSecureAttributes:
+          $ref: '#/definitions/threeDSecureAttributes'
+      required:
+      - authorize3DSecure
+  PayPal:
+    description: A representation of a paypal payment method
+    allOf:
+    - $ref: '#/definitions/AuthorizePaymentMethodDetails'
+    - type: object
+      properties:
+        allowPayPalCreditCardPayment:
+          type: boolean
+          description: Set it to true if you would like to pay on PayPal with a credit card (without a need for PayPal account) 
+          default: false
+      required:
+      - allowPayPalCreditCardPayment
+  AliPay:
+    description: A representation of a alipay payment method
+    allOf:
+    - $ref: '#/definitions/AuthorizePaymentMethodDetails'
+    - type: object
+      properties:
+        paymentSubject:
+          type: string
+          description: payment subject that will appear in alipay site
+      required:
+      - paymentSubject
+  Invoice:
+    description: A representation of a invoice payment method
+    allOf:
+    - $ref: '#/definitions/AuthorizePaymentMethodDetails'
+    - type: object
+      properties:
+        paymentMode:
+          type: string
+  PaymentMethodDetails:
+    type: object
+    discriminator: type
+    properties:
+      type:
+        type: string
+    required:
+    - type
